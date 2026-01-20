@@ -1,92 +1,63 @@
- /**
-  * API service module for the Social Media Dashboard frontend.
-  * Uses REACT_APP_API_BASE_URL to connect to the backend.
-  * Provides helper functions for GET/POST/PUT/DELETE and resource-specific calls.
-  */
+const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
-/**
- * Build full URL for endpoint, ensuring single slash between base and path.
- * @param {string} path - endpoint path starting with or without leading slash
- * @returns {string} full URL
- */
-function buildUrl(path) {
-  const base = (API_BASE_URL || '').replace(/\/+$/g, '');
-  const normalizedPath = String(path || '').replace(/^\/+/g, '');
-  return `${base}/${normalizedPath}`;
-}
-
-/**
- * Internal helper to handle fetch requests with JSON and error handling.
- * @param {string} url
- * @param {RequestInit} options
- * @returns {Promise<any>}
- */
-async function request(url, options = {}) {
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(options.headers || {}),
-  };
-
-  const resp = await fetch(url, { ...options, headers });
-  const contentType = resp.headers.get('content-type') || '';
-  let data = null;
-  if (contentType.includes('application/json')) {
-    data = await resp.json();
-  } else {
-    data = await resp.text();
-  }
+async function http(method, path, body) {
+  const resp = await fetch(`${baseURL}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: body ? JSON.stringify(body) : undefined,
+  });
   if (!resp.ok) {
-    const message = typeof data === 'string' ? data : (data?.detail || 'Request failed');
-    const error = new Error(message);
-    error.status = resp.status;
-    error.data = data;
-    throw error;
+    const text = await resp.text();
+    throw new Error(`HTTP ${resp.status}: ${text}`);
   }
-  return data;
+  return resp.status === 204 ? null : resp.json();
 }
 
 // PUBLIC_INTERFACE
-export const api = {
-  /** Get list of users */
-  async getUsers() {
-    return request(buildUrl('/users'), { method: 'GET' });
-  },
-  /** Get analytics overview */
-  async getAnalytics() {
-    return request(buildUrl('/analytics'), { method: 'GET' });
-  },
-  /** Get current or specified profile */
-  async getProfile(userId) {
-    const path = userId ? `/profiles/${encodeURIComponent(userId)}` : '/profiles/me';
-    return request(buildUrl(path), { method: 'GET' });
-  },
-  /** Update profile for current or specified user */
-  async updateProfile(payload, userId) {
-    const path = userId ? `/profiles/${encodeURIComponent(userId)}` : '/profiles/me';
-    return request(buildUrl(path), { method: 'PUT', body: JSON.stringify(payload) });
-  },
-  /** Admin: get platform/admin info */
-  async getAdminOverview() {
-    return request(buildUrl('/admin'), { method: 'GET' });
-  },
-  /** Admin: update user role or status */
-  async updateUser(userId, payload) {
-    return request(buildUrl(`/admin/users/${encodeURIComponent(userId)}`), {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
-  },
-  /** Example auth: create a simple session (placeholder) */
-  async login(username) {
-    // If backend has /users/login implement here; placeholder for demo.
-    // Returning mock shape for session context.
-    return Promise.resolve({ username, token: `demo-token-${username}` });
-  },
-  async logout() {
-    return Promise.resolve({ success: true });
-  },
-};
+export function getHealth() {
+  /** Get backend health info. */
+  return http('GET', '/');
+}
 
-export default api;
+// PUBLIC_INTERFACE
+export function listUsers({ page = 1, page_size = 10, q } = {}) {
+  /** List users with pagination */
+  const qs = new URLSearchParams();
+  qs.set('page', String(page));
+  qs.set('page_size', String(page_size));
+  if (q) qs.set('q', q);
+  return http('GET', `/users/?${qs.toString()}`);
+}
+
+// PUBLIC_INTERFACE
+export function createUser(data) {
+  /** Create a user */
+  return http('POST', '/users/', data);
+}
+
+// PUBLIC_INTERFACE
+export function createProfile(data) {
+  /** Create a profile for a user */
+  return http('POST', '/profiles/', data);
+}
+
+// PUBLIC_INTERFACE
+export function getAnalytics() {
+  /** Get analytics summary */
+  return http('GET', '/analytics/');
+}
+
+// PUBLIC_INTERFACE
+export function adminSummary() {
+  /** Get admin summary */
+  return http('GET', '/admin/summary');
+}
+
+// PUBLIC_INTERFACE
+export function grantAdmin(userId) {
+  /** Grant admin privileges to user */
+  return http('POST', `/admin/grant-admin/${userId}`);
+}

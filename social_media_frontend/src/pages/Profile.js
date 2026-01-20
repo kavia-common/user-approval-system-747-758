@@ -1,108 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import './pages.css';
+import React, { useState } from 'react';
+import { createUser, createProfile } from '../services/api';
 
-/**
- * Profile management page.
- * Loads current user profile, shows form to update display name, bio, and website.
- */
-
-// PUBLIC_INTERFACE
 export default function Profile() {
+  const [email, setEmail] = useState('demo@example.com');
+  const [name, setName] = useState('Demo');
+  const [bio, setBio] = useState('Hello there!');
+  const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [pending, setPending] = useState(true);
-  const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [msg, setMsg] = useState('');
 
-  useEffect(() => {
-    let alive = true;
-    api.getProfile()
-      .then(res => { if (alive) setProfile(res); })
-      .catch(e => { if (alive) setError(e.message || 'Failed to load profile'); })
-      .finally(() => { if (alive) setPending(false); });
-    return () => { alive = false; };
-  }, []);
-
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setProfile((p) => ({ ...(p || {}), [name]: value }));
-  };
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage('');
-    setError('');
+  const handleCreate = async () => {
+    setMsg('');
     try {
-      const payload = {
-        display_name: profile?.display_name || '',
-        bio: profile?.bio || '',
-        website: profile?.website || '',
-      };
-      const updated = await api.updateProfile(payload);
-      setProfile(updated);
-      setMessage('Profile updated successfully.');
-    } catch (err) {
-      setError(err.message || 'Failed to update profile');
-    } finally {
-      setSaving(false);
+      const u = await createUser({ email, name, password: 'password123' });
+      setUser(u);
+      const p = await createProfile({ user_id: u.id, bio });
+      setProfile(p);
+      setMsg('Created user and profile successfully.');
+    } catch (e) {
+      setMsg(String(e));
     }
   };
 
-  if (pending) return <div className="page"><div className="loading">Loading profile…</div></div>;
-  if (error) return <div className="page"><div className="error">{error}</div></div>;
-
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Profile</h1>
-        <p className="subtitle">Manage your personal information</p>
+    <div style={{ padding: 16 }}>
+      <h1>Profile</h1>
+      <div style={{ display: 'grid', gap: 8, maxWidth: 420 }}>
+        <label>Email <input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+        <label>Name <input value={name} onChange={(e) => setName(e.target.value)} /></label>
+        <label>Bio <input value={bio} onChange={(e) => setBio(e.target.value)} /></label>
+        <button className="btn" onClick={handleCreate}>Create User + Profile</button>
+        {msg && <div>{msg}</div>}
+        {user && <pre style={{ background: '#f3f4f6', padding: 8 }}>{JSON.stringify(user, null, 2)}</pre>}
+        {profile && <pre style={{ background: '#f3f4f6', padding: 8 }}>{JSON.stringify(profile, null, 2)}</pre>}
       </div>
-      {message && <div className="notice success">{message}</div>}
-      {error && <div className="notice error">{error}</div>}
-
-      <form className="card form" onSubmit={onSubmit}>
-        <div className="form-row">
-          <label htmlFor="display_name">Display Name</label>
-          <input
-            id="display_name"
-            name="display_name"
-            type="text"
-            value={profile?.display_name || ''}
-            onChange={onChange}
-            placeholder="Your display name"
-            required
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="bio">Bio</label>
-          <textarea
-            id="bio"
-            name="bio"
-            rows="4"
-            value={profile?.bio || ''}
-            onChange={onChange}
-            placeholder="Tell others about you"
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="website">Website</label>
-          <input
-            id="website"
-            name="website"
-            type="url"
-            value={profile?.website || ''}
-            onChange={onChange}
-            placeholder="https://example.com"
-          />
-        </div>
-        <div className="actions">
-          <button className="btn primary" type="submit" disabled={saving}>
-            {saving ? 'Saving…' : 'Save Changes'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 }

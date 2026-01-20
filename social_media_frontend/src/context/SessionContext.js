@@ -1,66 +1,34 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import api from '../services/api';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 
-/**
- * SessionContext provides basic session management for the app.
- * This is a lightweight placeholder; integrate with real auth endpoints as needed.
- */
-
-const SessionContext = createContext(undefined);
-
-// PUBLIC_INTERFACE
-export function useSession() {
-  /** Access the current session and actions. */
-  const ctx = useContext(SessionContext);
-  if (!ctx) throw new Error('useSession must be used within SessionProvider');
-  return ctx;
-}
+const SessionContext = createContext(null);
 
 // PUBLIC_INTERFACE
 export function SessionProvider({ children }) {
-  /** Provider that stores session info and exposes login/logout actions. */
+  /** Provide a simple demo session context. */
   const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('sm_session');
-    if (saved) {
-      try {
-        setSession(JSON.parse(saved));
-      } catch {
-        // ignore parse errors
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  // Persist session changes
-  useEffect(() => {
-    if (session) {
-      localStorage.setItem('sm_session', JSON.stringify(session));
-    } else {
-      localStorage.removeItem('sm_session');
-    }
-  }, [session]);
 
   const value = useMemo(() => ({
     session,
-    isAuthenticated: !!session?.token,
+    isAuthenticated: !!session,
     async login(username) {
-      const data = await api.login(username);
-      setSession(data);
-      return data;
+      setSession({ username });
     },
     async logout() {
-      await api.logout();
       setSession(null);
     },
   }), [session]);
 
   return (
     <SessionContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </SessionContext.Provider>
   );
+}
+
+// PUBLIC_INTERFACE
+export function useSession() {
+  /** Access session context */
+  const ctx = useContext(SessionContext);
+  if (!ctx) throw new Error('useSession must be used within SessionProvider');
+  return ctx;
 }
