@@ -1,82 +1,38 @@
-# Lightweight React Template for KAVIA
+# Social Media Dashboard Frontend (React)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A modern, lightweight React dashboard with sidebar navigation. It integrates with a FastAPI backend via environment-configured base URL.
 
 ## Features
+- Sidebar layout with pages: Analytics, Profile, Admin
+- Theming with primary (#3B82F6) and accent (#F59E0B)
+- API services for `/users`, `/profiles`, `/analytics`, `/admin`
+- Basic session state (demo login/logout) via Context
+- Responsive design
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+## Environment
+Create a `.env` file based on `.env.example`:
 
-## Getting Started
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+```
+REACT_APP_API_BASE_URL=http://localhost:3001
 ```
 
-### Components
+Ensure the backend is reachable at this URL (FastAPI default from the work item is port 3001).
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+## Scripts
+- `npm start` – start dev server at http://localhost:3000
+- `npm test` – run tests
+- `npm run build` – production build
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+## Project Structure
+- `src/services/api.js` – API service module
+- `src/context/SessionContext.js` – session context provider
+- `src/components/Sidebar.js` – sidebar navigation
+- `src/pages/Analytics.js` – analytics dashboard
+- `src/pages/Profile.js` – profile management
+- `src/pages/Admin.js` – admin user management
+- `src/pages/pages.css` – shared page styles
+- `src/App.js` – app layout & routing
 
-## Learn More
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Notes
+- Replace the placeholder login with real auth once backend endpoints are available.
+- All API calls rely on `REACT_APP_API_BASE_URL`.
